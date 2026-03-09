@@ -10,6 +10,7 @@ Simulador **básico, mas completo**, para testar decisões de política monetár
 4. Exportação de resultados em JSON e CSV.
 5. Geração automática de gráfico das séries simuladas (SVG por padrão).
 6. Resumo estatístico da trajetória (médias, mínimos, máximos e erro final da meta).
+7. Controles de estabilidade numérica com limites configuráveis de inflação e hiato.
 
 ## Estrutura do modelo
 
@@ -68,6 +69,14 @@ Escolher nome/arquivo do gráfico:
 
 ```bash
 python run_simulador.py --saida-grafico meu_grafico.svg
+```
+
+
+
+Para cenários extremos, você pode ajustar os limites de estabilização e inspecionar cada período:
+
+```bash
+python run_simulador.py --inflacao-max 15 --hiato-min -3 --hiato-max 3 --debug
 ```
 
 Desativar geração de gráfico:

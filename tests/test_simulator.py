@@ -49,6 +49,11 @@ def test_montar_parametros_com_cenario(cenario):
         limite_inferior_juros=0.0,
         choque_inflacao=None,
         choque_hiato=None,
+        inflacao_min=0.0,
+        inflacao_max=20.0,
+        hiato_min=-5.0,
+        hiato_max=5.0,
+        debug=False,
     )
 
     parametros = montar_parametros(args)
@@ -118,3 +123,23 @@ def test_parser_ler_juros_inicial_customizado():
     parser = build_parser()
     args = parser.parse_args(["--juros-inicial", "10.5"])
     assert args.juros_inicial == pytest.approx(10.5)
+
+
+def test_simulacao_aplica_limites_para_evitar_explosao():
+    parametros = SimulacaoParametros(
+        periodos=6,
+        inflacao_inicial=25.0,
+        hiato_produto_inicial=10.0,
+        sensibilidade_inflacao_hiato=0.9,
+        sensibilidade_hiato_juros=0.9,
+    )
+    estados = SimuladorPoliticaMonetaria(parametros).simular()
+    assert all(parametros.inflacao_min <= e.inflacao <= parametros.inflacao_max for e in estados[1:])
+    assert all(parametros.hiato_min <= e.hiato_produto <= parametros.hiato_max for e in estados[1:])
+
+
+def test_parametros_invalidos_para_limites_disparam_erro():
+    with pytest.raises(ValueError):
+        SimulacaoParametros(inflacao_min=10.0, inflacao_max=2.0).validar()
+    with pytest.raises(ValueError):
+        SimulacaoParametros(hiato_min=2.0, hiato_max=-2.0).validar()

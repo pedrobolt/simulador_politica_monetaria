@@ -24,6 +24,11 @@ class SimulacaoParametros:
     limite_inferior_juros: float = 0.0
     choque_inflacao: float = 0.0
     choque_hiato: float = 0.0
+    inflacao_min: float = 0.0
+    inflacao_max: float = 20.0
+    hiato_min: float = -5.0
+    hiato_max: float = 5.0
+    debug: bool = False
 
     def validar(self) -> None:
         if self.periodos <= 0:
@@ -38,6 +43,10 @@ class SimulacaoParametros:
             raise ValueError("limite_inferior_juros não pode ser negativo")
         if self.juros_inicial is not None and self.juros_inicial < self.limite_inferior_juros:
             raise ValueError("juros_inicial não pode ser menor que limite_inferior_juros")
+        if self.inflacao_min > self.inflacao_max:
+            raise ValueError("inflacao_min não pode ser maior que inflacao_max")
+        if self.hiato_min > self.hiato_max:
+            raise ValueError("hiato_min não pode ser maior que hiato_max")
 
 
 @dataclass
@@ -75,6 +84,9 @@ class SimuladorPoliticaMonetaria:
             + p.choque_hiato
         )
 
+        inflacao_proxima = min(max(inflacao_proxima, p.inflacao_min), p.inflacao_max)
+        hiato_proximo = min(max(hiato_proximo, p.hiato_min), p.hiato_max)
+
         juros_proximo = self.calcular_juros(inflacao_proxima, hiato_proximo)
 
         return {"inflacao": inflacao_proxima, "hiato_produto": hiato_proximo, "juros_nominal": juros_proximo}
@@ -95,6 +107,8 @@ class SimuladorPoliticaMonetaria:
         for t in range(1, p.periodos + 1):
             novo = self.proximo_estado(inflacao, hiato, juros)
             inflacao, hiato, juros = novo["inflacao"], novo["hiato_produto"], novo["juros_nominal"]
+            if p.debug:
+                print(f"t={t}, inflacao={inflacao:.2f}, hiato={hiato:.2f}, juros={juros:.2f}")
             estados.append(EstadoPeriodo(t, inflacao, hiato, juros))
 
         return estados

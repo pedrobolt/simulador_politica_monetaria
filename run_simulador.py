@@ -39,6 +39,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limite-inferior-juros", type=float, default=0.0)
     parser.add_argument("--choque-inflacao", type=float)
     parser.add_argument("--choque-hiato", type=float)
+    parser.add_argument("--inflacao-min", type=float, default=0.0)
+    parser.add_argument("--inflacao-max", type=float, default=20.0)
+    parser.add_argument("--hiato-min", type=float, default=-5.0)
+    parser.add_argument("--hiato-max", type=float, default=5.0)
+    parser.add_argument("--debug", action="store_true", help="Imprime trajetória período a período")
     parser.add_argument("--saida-json", type=Path, default=Path("resultado_simulacao.json"))
     parser.add_argument("--saida-csv", type=Path, default=Path("trajetoria_simulacao.csv"))
     parser.add_argument("--gerar-grafico", dest="gerar_grafico", action="store_true", help="Força geração de gráfico")
@@ -70,6 +75,11 @@ def montar_parametros(args: argparse.Namespace) -> SimulacaoParametros:
         limite_inferior_juros=args.limite_inferior_juros,
         choque_inflacao=valor("choque_inflacao", 0.0),
         choque_hiato=valor("choque_hiato", 0.0),
+        inflacao_min=args.inflacao_min,
+        inflacao_max=args.inflacao_max,
+        hiato_min=args.hiato_min,
+        hiato_max=args.hiato_max,
+        debug=args.debug,
     )
 
 
