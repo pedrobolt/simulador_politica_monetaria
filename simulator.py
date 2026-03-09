@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from statistics import mean
 from typing import Dict, List
 
 
 @dataclass
 class SimulacaoParametros:
-    """Parâmetros principais para a simulação macroeconômica simplificada."""
+    """Parâmetros para simulação macro simplificada com regra de Taylor."""
 
     periodos: int = 24
     inflacao_inicial: float = 4.5
@@ -17,8 +18,23 @@ class SimulacaoParametros:
     beta_taylor: float = 0.5
     inercia_inflacao: float = 0.7
     sensibilidade_hiato_juros: float = 0.2
+    sensibilidade_inflacao_hiato: float = 0.3
+    persistencia_hiato: float = 0.6
+    limite_inferior_juros: float = 0.0
     choque_inflacao: float = 0.0
     choque_hiato: float = 0.0
+
+    def validar(self) -> None:
+        if self.periodos <= 0:
+            raise ValueError("periodos deve ser maior que zero")
+        if not 0 <= self.inercia_inflacao <= 1:
+            raise ValueError("inercia_inflacao deve estar entre 0 e 1")
+        if not 0 <= self.persistencia_hiato <= 1:
+            raise ValueError("persistencia_hiato deve estar entre 0 e 1")
+        if self.sensibilidade_hiato_juros < 0:
+            raise ValueError("sensibilidade_hiato_juros não pode ser negativa")
+        if self.limite_inferior_juros < 0:
+            raise ValueError("limite_inferior_juros não pode ser negativo")
 
 
 @dataclass
@@ -30,88 +46,70 @@ class EstadoPeriodo:
 
 
 class SimuladorPoliticaMonetaria:
-    """
-    Simulador básico de política monetária com:
-    - Regra de Taylor para juros.
-    - Curva de Phillips simplificada para inflação.
-    - Dinâmica simples de hiato do produto.
-    """
-
     def __init__(self, parametros: SimulacaoParametros):
+        parametros.validar()
         self.parametros = parametros
 
     def calcular_juros(self, inflacao: float, hiato_produto: float) -> float:
         p = self.parametros
         desvio_meta = inflacao - p.meta_inflacao
-        return p.juros_neutro + p.alfa_taylor * desvio_meta + p.beta_taylor * hiato_produto
+        juros = p.juros_neutro + p.alfa_taylor * desvio_meta + p.beta_taylor * hiato_produto
+        return max(juros, p.limite_inferior_juros)
 
     def proximo_estado(self, inflacao_atual: float, hiato_atual: float, juros_atual: float) -> Dict[str, float]:
         p = self.parametros
 
-        # Inflação com inércia e efeito do hiato do produto.
         inflacao_proxima = (
             p.inercia_inflacao * inflacao_atual
             + (1 - p.inercia_inflacao) * p.meta_inflacao
-            + 0.3 * hiato_atual
+            + p.sensibilidade_inflacao_hiato * hiato_atual
             + p.choque_inflacao
         )
 
-        # Hiato reduz quando juros estão acima da taxa neutra.
         hiato_proximo = (
-            0.6 * hiato_atual
+            p.persistencia_hiato * hiato_atual
             - p.sensibilidade_hiato_juros * (juros_atual - p.juros_neutro)
             + p.choque_hiato
         )
 
         juros_proximo = self.calcular_juros(inflacao_proxima, hiato_proximo)
 
-        return {
-            "inflacao": inflacao_proxima,
-            "hiato_produto": hiato_proximo,
-            "juros_nominal": juros_proximo,
-        }
+        return {"inflacao": inflacao_proxima, "hiato_produto": hiato_proximo, "juros_nominal": juros_proximo}
 
     def simular(self) -> List[EstadoPeriodo]:
         p = self.parametros
-
         juros_inicial = self.calcular_juros(p.inflacao_inicial, p.hiato_produto_inicial)
+
         estados: List[EstadoPeriodo] = [
-            EstadoPeriodo(
-                periodo=0,
-                inflacao=p.inflacao_inicial,
-                hiato_produto=p.hiato_produto_inicial,
-                juros_nominal=juros_inicial,
-            )
+            EstadoPeriodo(0, p.inflacao_inicial, p.hiato_produto_inicial, juros_inicial)
         ]
 
         inflacao, hiato, juros = p.inflacao_inicial, p.hiato_produto_inicial, juros_inicial
         for t in range(1, p.periodos + 1):
             novo = self.proximo_estado(inflacao, hiato, juros)
-            inflacao = novo["inflacao"]
-            hiato = novo["hiato_produto"]
-            juros = novo["juros_nominal"]
-            estados.append(
-                EstadoPeriodo(
-                    periodo=t,
-                    inflacao=inflacao,
-                    hiato_produto=hiato,
-                    juros_nominal=juros,
-                )
-            )
+            inflacao, hiato, juros = novo["inflacao"], novo["hiato_produto"], novo["juros_nominal"]
+            estados.append(EstadoPeriodo(t, inflacao, hiato, juros))
 
         return estados
 
 
 def resumir_resultados(estados: List[EstadoPeriodo], meta_inflacao: float) -> Dict[str, float]:
+    if not estados:
+        raise ValueError("A lista de estados não pode ser vazia")
+
     inflacoes = [e.inflacao for e in estados]
     juros = [e.juros_nominal for e in estados]
     hiatos = [e.hiato_produto for e in estados]
-
     ultimo = estados[-1]
+
     return {
-        "inflacao_media": sum(inflacoes) / len(inflacoes),
-        "juros_medio": sum(juros) / len(juros),
-        "hiato_medio": sum(hiatos) / len(hiatos),
+        "inflacao_media": mean(inflacoes),
+        "juros_medio": mean(juros),
+        "hiato_medio": mean(hiatos),
+        "inflacao_min": min(inflacoes),
+        "inflacao_max": max(inflacoes),
+        "juros_min": min(juros),
+        "juros_max": max(juros),
         "inflacao_final": ultimo.inflacao,
         "juros_final": ultimo.juros_nominal,
         "hiato_final": ultimo.hiato_produto,
