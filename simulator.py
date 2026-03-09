@@ -14,6 +14,7 @@ class SimulacaoParametros:
     meta_inflacao: float = 3.0
     hiato_produto_inicial: float = -0.5
     juros_neutro: float = 4.0
+    juros_inicial: float | None = None
     alfa_taylor: float = 1.5
     beta_taylor: float = 0.5
     inercia_inflacao: float = 0.7
@@ -35,6 +36,8 @@ class SimulacaoParametros:
             raise ValueError("sensibilidade_hiato_juros não pode ser negativa")
         if self.limite_inferior_juros < 0:
             raise ValueError("limite_inferior_juros não pode ser negativo")
+        if self.juros_inicial is not None and self.juros_inicial < self.limite_inferior_juros:
+            raise ValueError("juros_inicial não pode ser menor que limite_inferior_juros")
 
 
 @dataclass
@@ -78,7 +81,11 @@ class SimuladorPoliticaMonetaria:
 
     def simular(self) -> List[EstadoPeriodo]:
         p = self.parametros
-        juros_inicial = self.calcular_juros(p.inflacao_inicial, p.hiato_produto_inicial)
+        juros_inicial = (
+            p.juros_inicial
+            if p.juros_inicial is not None
+            else self.calcular_juros(p.inflacao_inicial, p.hiato_produto_inicial)
+        )
 
         estados: List[EstadoPeriodo] = [
             EstadoPeriodo(0, p.inflacao_inicial, p.hiato_produto_inicial, juros_inicial)

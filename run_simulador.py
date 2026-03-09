@@ -29,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--meta-inflacao", type=float, default=3.0)
     parser.add_argument("--hiato-inicial", type=float, default=-0.5)
     parser.add_argument("--juros-neutro", type=float, default=4.0)
+    parser.add_argument("--juros-inicial", type=float, help="Define a taxa de juros no período 0")
     parser.add_argument("--alfa-taylor", type=float)
     parser.add_argument("--beta-taylor", type=float)
     parser.add_argument("--inercia-inflacao", type=float, default=0.7)
@@ -59,6 +60,7 @@ def montar_parametros(args: argparse.Namespace) -> SimulacaoParametros:
         meta_inflacao=args.meta_inflacao,
         hiato_produto_inicial=args.hiato_inicial,
         juros_neutro=args.juros_neutro,
+        juros_inicial=args.juros_inicial,
         alfa_taylor=valor("alfa_taylor", 1.5),
         beta_taylor=valor("beta_taylor", 0.5),
         inercia_inflacao=args.inercia_inflacao,

@@ -39,6 +39,7 @@ def test_montar_parametros_com_cenario(cenario):
         meta_inflacao=3.0,
         hiato_inicial=-0.2,
         juros_neutro=4.0,
+        juros_inicial=None,
         alfa_taylor=None,
         beta_taylor=None,
         inercia_inflacao=0.6,
@@ -105,3 +106,15 @@ def test_exportar_grafico_png_sem_matplotlib_falha_de_forma_clara(tmp_path, monk
 
     with pytest.raises(RuntimeError):
         exportar_grafico(tmp_path / "grafico.png", estados)
+
+
+def test_simulacao_permite_juros_inicial_customizado():
+    parametros = SimulacaoParametros(periodos=2, juros_inicial=9.25)
+    estados = SimuladorPoliticaMonetaria(parametros).simular()
+    assert estados[0].juros_nominal == pytest.approx(9.25)
+
+
+def test_parser_ler_juros_inicial_customizado():
+    parser = build_parser()
+    args = parser.parse_args(["--juros-inicial", "10.5"])
+    assert args.juros_inicial == pytest.approx(10.5)

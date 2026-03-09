@@ -4,7 +4,7 @@ Simulador **básico, mas completo**, para testar decisões de política monetár
 
 ## O que este projeto entrega
 
-1. Configuração de parâmetros econômicos (meta, inflação inicial, hiato, choques).
+1. Configuração de parâmetros econômicos (meta, inflação inicial, hiato, choques e juros inicial opcional).
 2. Simulação temporal com regra de Taylor e dinâmica simplificada de inflação/atividade.
 3. Cenários pré-definidos (`base`, `hawkish`, `dovish`, `choque_oferta`).
 4. Exportação de resultados em JSON e CSV.
@@ -49,6 +49,13 @@ python run_simulador.py \
   --inflacao-inicial 6.2 \
   --alfa-taylor 2.2 \
   --limite-inferior-juros 1.5
+```
+
+
+Também é possível definir a projeção inicial da Selic/juros do período 0:
+
+```bash
+python run_simulador.py --inflacao-inicial 5.8 --juros-inicial 12.25
 ```
 
 ### 4) Gráfico (automático por padrão)
