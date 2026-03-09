@@ -40,7 +40,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--choque-hiato", type=float)
     parser.add_argument("--saida-json", type=Path, default=Path("resultado_simulacao.json"))
     parser.add_argument("--saida-csv", type=Path, default=Path("trajetoria_simulacao.csv"))
-    parser.add_argument("--gerar-grafico", action="store_true", help="Gera gráfico das séries simuladas")
+    parser.add_argument("--gerar-grafico", dest="gerar_grafico", action="store_true", help="Força geração de gráfico")
+    parser.add_argument("--sem-grafico", dest="gerar_grafico", action="store_false", help="Não gera gráfico")
+    parser.set_defaults(gerar_grafico=True)
     parser.add_argument("--saida-grafico", type=Path, default=Path("grafico_simulacao.svg"))
     return parser
 

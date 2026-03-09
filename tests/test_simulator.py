@@ -71,7 +71,14 @@ def test_parser_possui_opcoes_de_grafico():
     parser = build_parser()
     args = parser.parse_args([])
     assert hasattr(args, "gerar_grafico")
+    assert args.gerar_grafico is True
     assert str(args.saida_grafico).endswith("grafico_simulacao.svg")
+
+
+def test_parser_permite_desativar_grafico():
+    parser = build_parser()
+    args = parser.parse_args(["--sem-grafico"])
+    assert args.gerar_grafico is False
 
 
 def test_exportar_grafico_gera_svg_sem_dependencias(tmp_path):

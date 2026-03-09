@@ -8,7 +8,7 @@ Simulador **básico, mas completo**, para testar decisões de política monetár
 2. Simulação temporal com regra de Taylor e dinâmica simplificada de inflação/atividade.
 3. Cenários pré-definidos (`base`, `hawkish`, `dovish`, `choque_oferta`).
 4. Exportação de resultados em JSON e CSV.
-5. Geração opcional de gráfico PNG com as séries simuladas.
+5. Geração automática de gráfico das séries simuladas (SVG por padrão).
 6. Resumo estatístico da trajetória (médias, mínimos, máximos e erro final da meta).
 
 ## Estrutura do modelo
@@ -51,17 +51,22 @@ python run_simulador.py \
   --limite-inferior-juros 1.5
 ```
 
-
-### 4) Gerar gráfico automaticamente
+### 4) Gráfico (automático por padrão)
 
 ```bash
-python run_simulador.py --gerar-grafico
+python run_simulador.py
 ```
 
-Também é possível escolher o nome/arquivo:
+Escolher nome/arquivo do gráfico:
 
 ```bash
-python run_simulador.py --gerar-grafico --saida-grafico meu_grafico.svg
+python run_simulador.py --saida-grafico meu_grafico.svg
+```
+
+Desativar geração de gráfico:
+
+```bash
+python run_simulador.py --sem-grafico
 ```
 
 ## Saídas
@@ -70,7 +75,7 @@ python run_simulador.py --gerar-grafico --saida-grafico meu_grafico.svg
 
 - `resultado_simulacao.json`: cenário, parâmetros, resumo e trajetória.
 - `trajetoria_simulacao.csv`: série por período.
-- `grafico_simulacao.svg`: gráfico com inflação, juros e hiato (quando `--gerar-grafico` é usado).
+- `grafico_simulacao.svg`: gráfico com inflação, juros e hiato (gerado por padrão).
 
 ## Qualidade e validações
 
