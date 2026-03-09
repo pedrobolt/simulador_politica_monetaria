@@ -85,10 +85,13 @@ def montar_parametros(args: argparse.Namespace) -> SimulacaoParametros:
 
 def exportar_csv(destino: Path, estados: list) -> None:
     with destino.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["periodo", "inflacao", "hiato_produto", "juros_nominal"])
+        writer = csv.DictWriter(f, fieldnames=["periodo", "inflacao", "hiato_produto", "juros_nominal"],
+                                delimiter=";")  # ponto-e-vírgula como separador de campo
         writer.writeheader()
         for estado in estados:
-            writer.writerow(estado_para_dict(estado))
+            d = estado_para_dict(estado)
+            # converte decimal de ponto para vírgula
+            writer.writerow({k: str(v).replace(".", ",") for k, v in d.items()})
 
 
 def _polyline_points(valores: list[float], x0: float, y0: float, largura: float, altura: float) -> str:
