@@ -122,14 +122,24 @@ def grafico_comparativo(df: pd.DataFrame, meta: float) -> go.Figure:
 
 
 def grafico_dispersao(df: pd.DataFrame) -> go.Figure:
+    df_plot = df.assign(
+        **{
+            "Tamanho Juros Selic": df["Juros Selic (%)"].clip(lower=0),
+        }
+    )
+
     fig = px.scatter(
-        df,
+        df_plot,
         x="Hiato do Produto (%)",
         y="Inflação (%)",
-        size="Juros Selic (%)",
+        size="Tamanho Juros Selic",
         color="Desvio da Meta (%)",
         color_continuous_scale="RdYlGn_r",
-        hover_data={"Período": True},
+        hover_data={
+            "Período": True,
+            "Juros Selic (%)": ':.2f',
+            "Tamanho Juros Selic": False,
+        },
         template="plotly_white",
         title="Relação entre hiato do produto, inflação e juros",
     )
